@@ -84,15 +84,23 @@ function displayForecast(data) {
   forecastCards.innerHTML = "";
 
   dailyMap.forEach(({ date, temp, description, icon }) => {
+    // Create wrapper div
+    const wrapper = document.createElement("div");
+    wrapper.className = "card-wrapper";
+
+    // Create inner card
     const card = document.createElement("div");
     card.className = "card text-center";
+
     card.innerHTML = `
       <h4 class="text-lg font-semibold mb-1">${date}</h4>
       <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${description}" class="w-16 mx-auto mb-2" />
       <p class="text-gray-700 capitalize">${description}</p>
       <p class="text-blue-700 font-bold">${Math.round(temp)}°C</p>
     `;
-    forecastCards.appendChild(card);
+
+    wrapper.appendChild(card);
+    forecastCards.appendChild(wrapper);
   });
 
   forecastSection.classList.remove("hidden");
@@ -101,6 +109,8 @@ function displayForecast(data) {
 //  Event listeners
 searchBtn.addEventListener('click', () => {
   const city = cityInput.value.trim();
+    cityInput.value = ""; // Clear input after use
+
   if (city) {
     fetchWeather(city);
     fetchForecast(city);

@@ -1,0 +1,12 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+#forecastCards .card,
+#currentWeather {
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(to top right, #eff6ff, #ffffff);
+  box-shadow: 0 10px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
