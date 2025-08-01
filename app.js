@@ -63,11 +63,12 @@ function displayWeather(data) {
 
 //  Render 5-Day Forecast
 function displayForecast(data) {
+  const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
   const dailyMap = new Map();
 
   data.list.forEach(item => {
     const date = item.dt_txt.split(" ")[0];
-    if (!dailyMap.has(date)) {
+    if (date !== today && !dailyMap.has(date)) {
       dailyMap.set(date, {
         date: new Date(item.dt_txt).toLocaleDateString(undefined, {
           weekday: 'short',
@@ -81,24 +82,21 @@ function displayForecast(data) {
     }
   });
 
-  forecastCards.innerHTML = "";
+  // Keep only first 5 days
+  const entries = Array.from(dailyMap.entries()).slice(0, 5);
 
-  dailyMap.forEach(({ date, temp, description, icon }) => {
-    // Create wrapper div
+  forecastCards.innerHTML = "";
+  entries.forEach(([_, { date, temp, description, icon }]) => {
     const wrapper = document.createElement("div");
     wrapper.className = "card-wrapper";
-
-    // Create inner card
     const card = document.createElement("div");
     card.className = "card text-center";
-
     card.innerHTML = `
       <h4 class="text-lg font-semibold mb-1">${date}</h4>
       <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${description}" class="w-16 mx-auto mb-2" />
       <p class="text-gray-700 capitalize">${description}</p>
       <p class="text-blue-700 font-bold">${Math.round(temp)}°C</p>
     `;
-
     wrapper.appendChild(card);
     forecastCards.appendChild(wrapper);
   });
@@ -114,6 +112,7 @@ searchBtn.addEventListener('click', () => {
   if (city) {
     fetchWeather(city);
     fetchForecast(city);
+    saveToHistory(city);
   } else {
     outputDiv.innerHTML = `<p class="text-yellow-700">Please enter a city name</p>`;
   }
@@ -125,3 +124,37 @@ locationBtn.addEventListener('click', () => {
     () => outputDiv.innerHTML = `<p class="text-red-700">Location access denied</p>`
   );
 });
+
+const historyDiv = document.getElementById("historyDropdown");
+const historyKey = "weatherSearchHistory";
+
+function saveToHistory(city) {
+  let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  history = history.filter(item => item !== city); // Remove duplicates
+  history.unshift(city); // Add to front
+  if (history.length > 5) history.pop(); // Keep last 5
+  localStorage.setItem(historyKey, JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  if (history.length === 0) return;
+
+  historyDiv.innerHTML = `
+    <label for="historySelect" class="block text-sm font-medium mb-1">Recent Searches</label>
+    <select id="historySelect" class="w-full p-2 rounded-lg border shadow-sm focus:outline-none focus:ring focus:ring-blue-400">
+      <option value="" disabled selected>Select a city</option>
+      ${history.map(city => `<option value="${city}">${city}</option>`).join("")}
+    </select>
+  `;
+
+  document.getElementById("historySelect").addEventListener("change", e => {
+    const city = e.target.value;
+    fetchWeather(city);
+    fetchForecast(city);
+  });
+}
+
+// Call on load
+renderHistory();
